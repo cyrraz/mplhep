@@ -19,6 +19,12 @@ from .comparison import (
     get_pull,
     get_ratio,
 )
+from .comparison_plotters import (
+    plot_comparison,
+    plot_data_model_comparison,
+    plot_model,
+    plot_two_hist_comparison,
+)
 from .label import save_variations, savelabels
 from .plot import (
     append_axes,
@@ -81,6 +87,10 @@ __all__ = [
     "get_plottables",
     "get_pull",
     "get_ratio",
+    "plot_comparison",
+    "plot_two_hist_comparison",
+    "plot_model",
+    "plot_data_model_comparison",
     "hist2dplot",
     # Log plot functions
     "histplot",

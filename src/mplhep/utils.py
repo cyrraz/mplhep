@@ -639,6 +639,11 @@ class EnhancedPlottableHistogram(NumPyPlottableHistogram):
             self._variances = self.values()
         if self.variances() is None:
             return
+        if np.allclose(self.variances(), 0):
+            self.yerr_lo = np.zeros_like(self.values())
+            self.yerr_hi = np.zeros_like(self.values())
+            self._errors_present = True
+            return
         assert method in ["poisson", "sqrt", None] or callable(method)
         if method is None:
             method = self.method
@@ -814,6 +819,8 @@ def _check_counting_histogram(hist_list):
         If the histogram is not a counting histogram.
 
     """
+    if not isinstance(hist_list, list):
+        hist_list = [hist_list]
     for hist_obj in hist_list:
         if hist_obj.kind != Kind.COUNT:
             msg = f"The histogram must be a counting histogram, but the input histogram has kind {hist_obj.kind}."
@@ -927,3 +934,41 @@ def to_padded2d(h, variances=False):
     if variances:
         return padded, padded_varis
     return padded
+
+
+def set_fitting_ylabel_fontsize(ax):
+    """
+    Get the suitable font size for a ylabel text that fits within the plot's y-axis limits.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The matplotlib subplot to adjust the ylabel font size for.
+
+    Returns
+    -------
+    float
+        The adjusted font size for the ylabel text.
+    """
+    ylabel_fontsize = ax.yaxis.get_label().get_fontsize()
+
+    # Check if renderer is available
+    if ax.figure.canvas.get_renderer() is None:
+        ax.figure.canvas.draw()
+
+    while (
+        ax.yaxis.get_label()
+        .get_window_extent(renderer=ax.figure.canvas.get_renderer())
+        .transformed(ax.transData.inverted())
+        .y1
+        > ax.get_ylim()[1]
+    ):
+        ylabel_fontsize -= 0.1
+
+        if ylabel_fontsize <= 0:
+            msg = "Cannot fit ylabel text within the y-axis limits."
+            raise ValueError(msg)
+
+        ax.get_yaxis().get_label().set_size(ylabel_fontsize)
+
+    return ylabel_fontsize
